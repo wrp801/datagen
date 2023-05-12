@@ -6,6 +6,7 @@ use std::error::Error;
 use std::fs::File;
 use std::io::{self, Write};
 use std::str::FromStr;
+use std::thread;
 
 #[derive(Parser, Debug)]
 struct Args {
@@ -74,6 +75,31 @@ fn generate_csv_file(n: i32, file_name:String) -> Result<(), Box<dyn Error>> {
         file,
         "string,char,int,float,bool,date,datetime"
     )?;
+
+    thread::spawn(|| {
+        for _ in 0..n {
+            let string_val = generate_random_string(10);
+            let char_val = generate_random_char();
+            let int_val = generate_random_int(1, 100);
+            let float_val = generate_random_float(0.0, 1.0);
+            let bool_val = generate_random_bool();
+            let date_val = generate_random_date(start_date, end_date);
+            let datetime_val = generate_random_datetime(start_datetime, end_datetime);
+
+            writeln!(
+                file,
+                "{},{},{},{},{},{},{}",
+                string_val,
+                char_val,
+                int_val,
+                float_val,
+                bool_val,
+                date_val,
+                datetime_val
+            );
+        }
+
+    });
 
     for _ in 0..n {
         let string_val = generate_random_string(10);

@@ -20,7 +20,7 @@ struct Args {
 // Generate a random string of length 'len'
 fn generate_random_string(len: usize) -> String {
     rand::thread_rng()
-        .sample_iter(Uniform::new(char::from(32), char::from(126)))
+        .sample_iter(Uniform::new(char::from(97), char::from(122)))
         .take(len)
         .map(char::from)
         .collect()
@@ -30,7 +30,7 @@ fn generate_random_string(len: usize) -> String {
 fn generate_random_char() -> char {
     // choose a random character from the ascii table then convert it
    let num =  rand::thread_rng()
-        .gen_range(65..=122);
+        .gen_range(97..=122);
 
    return char::from_u32(num).unwrap()
 }
@@ -73,7 +73,7 @@ fn generate_csv_file(n: i32, file_name:String) -> Result<(), Box<dyn Error>> {
     let mut file = File::create(&filename)?;
     writeln!(
         file,
-        "string,char,int,float,bool,date,datetime"
+        "string_col,char_col,int_col,float_col,bool_col,date_col,datetime_col"
     )?;
 
     thread::spawn(|| {

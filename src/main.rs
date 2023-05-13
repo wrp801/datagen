@@ -4,8 +4,9 @@ use rand::distributions::{Distribution, Standard, Alphanumeric, Uniform};
 use rand::{thread_rng, Rng};
 use std::error::Error;
 use std::fs::File;
-use std::io::{self, Write};
+use std::io::{self, Write, BufWriter};
 use std::str::FromStr;
+use std::sync::{Arc, Mutex};
 use std::thread;
 
 #[derive(Parser, Debug)]
@@ -75,31 +76,28 @@ fn generate_csv_file(n: i32, file_name:String) -> Result<(), Box<dyn Error>> {
         file,
         "string_col,char_col,int_col,float_col,bool_col,date_col,datetime_col"
     )?;
+    for _ in 0..n {
+        let string_val = generate_random_string(10);
+        let char_val = generate_random_char();
+        let int_val = generate_random_int(1, 100);
+        let float_val = generate_random_float(0.0, 1.0);
+        let bool_val = generate_random_bool();
+        let date_val = generate_random_date(start_date, end_date);
+        let datetime_val = generate_random_datetime(start_datetime, end_datetime);
 
-    thread::spawn(|| {
-        for _ in 0..n {
-            let string_val = generate_random_string(10);
-            let char_val = generate_random_char();
-            let int_val = generate_random_int(1, 100);
-            let float_val = generate_random_float(0.0, 1.0);
-            let bool_val = generate_random_bool();
-            let date_val = generate_random_date(start_date, end_date);
-            let datetime_val = generate_random_datetime(start_datetime, end_datetime);
+        writeln!(
+            file,
+            "{},{},{},{},{},{},{}",
+            string_val,
+            char_val,
+            int_val,
+            float_val,
+            bool_val,
+            date_val,
+            datetime_val
+        );
+    }
 
-            writeln!(
-                file,
-                "{},{},{},{},{},{},{}",
-                string_val,
-                char_val,
-                int_val,
-                float_val,
-                bool_val,
-                date_val,
-                datetime_val
-            );
-        }
-
-    });
 
     for _ in 0..n {
         let string_val = generate_random_string(10);
@@ -132,6 +130,39 @@ fn main() {
     let rows = *(&args.rows); //convert to i32 
     let name = &args.name; 
 
-    let file_name = String::from_str("mytest").unwrap();
-    generate_csv_file(rows, name.to_string());
+    // concurrency test
+    let num_threads = 4;
+    let rows_per_thread = rows/num_threads;
+    // create a shared mutable state for the file
+    let file_writer = Arc::new(Mutex::new(BufWriter::new(File::create(name).unwrap())));
+    let mut handles = Vec::new();
+    for i in 0..num_threads {
+        let file_writer_clone = file_writer.clone();
+        let start = i * rows_per_thread;
+        let end = if i == num_threads - 1 {rows} else {start + rows_per_thread};
+        handles.push(thread::spawn(move || {
+            for _ in start..end {
+                let string_val = generate_random_string(10);
+                let char_val = generate_random_char();
+                let int_val = generate_random_int(1, 100);
+                let float_val = generate_random_float(0.0, 1.0);
+                let bool_val = generate_random_bool();
+                let date_val = generate_random_date(NaiveDate::from_ymd(2022, 1, 1), NaiveDate::from_ymd(2023, 12, 31));
+                let datetime_val = generate_random_datetime(NaiveDateTime::from_timestamp(1640995200, 0), NaiveDateTime::from_timestamp(1643620800, 0));
+                
+                let row = format!("{},{},{},{},{},{},{}\n", string_val, char_val, int_val, float_val, bool_val, date_val, datetime_val);
+                let mut file_writer = file_writer_clone.lock().unwrap();
+                file_writer.write(row.as_bytes()).unwrap();
+
+            }
+        }));
+    }
+    for handle in handles {
+        handle.join().unwrap();
+    }
+
+    // Flush the file writer to make sure all data is written to disk
+    let mut file_writer = file_writer.lock().unwrap();
+    file_writer.flush().unwrap();
+    // generate_csv_file(rows, name.to_string());
 }

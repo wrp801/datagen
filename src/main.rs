@@ -1,12 +1,12 @@
 use clap::Parser; 
 use chrono::{Duration, NaiveDate, NaiveDateTime};
-use rand::distributions::{Distribution, Standard, Alphanumeric, Uniform};
+use rand::distributions::{Distribution, Uniform};
 use rand::{thread_rng, Rng};
 use std::error::Error;
 use std::fs::{File, OpenOptions};
-use std::io::{self, Write, BufWriter};
+use std::io::{Write, BufWriter};
 use std::path::PathBuf;
-use std::str::FromStr;
+
 use std::sync::{Arc, Mutex};
 use std::thread;
 

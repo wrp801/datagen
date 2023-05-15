@@ -3,8 +3,9 @@ use chrono::{Duration, NaiveDate, NaiveDateTime};
 use rand::distributions::{Distribution, Standard, Alphanumeric, Uniform};
 use rand::{thread_rng, Rng};
 use std::error::Error;
-use std::fs::File;
+use std::fs::{File, OpenOptions};
 use std::io::{self, Write, BufWriter};
+use std::path::PathBuf;
 use std::str::FromStr;
 use std::sync::{Arc, Mutex};
 use std::thread;
@@ -15,7 +16,10 @@ struct Args {
     rows: i32,
     
     #[arg(short = 'n', long = "name", value_name = "NAME")]
-    name: String
+    name: String,
+
+    // #[arg(short = 'm', long = "multiple", value_name = "MULTIPLE", required = true)]
+    // multiple: i32
 }
 
 // Generate a random string of length 'len'
@@ -61,7 +65,6 @@ fn generate_random_datetime(start: NaiveDateTime, end: NaiveDateTime) -> NaiveDa
     let secs = (end - start).num_seconds();
     start + Duration::seconds(thread_rng().gen_range(0..=secs + 1))
 }
-
 // Generate 'n' rows of random data and write to a CSV file
 fn generate_csv_file(n: i32, file_name:String) -> Result<(), Box<dyn Error>> {
     let start_date = NaiveDate::from_ymd(2022, 1, 1);
@@ -70,7 +73,6 @@ fn generate_csv_file(n: i32, file_name:String) -> Result<(), Box<dyn Error>> {
     let end_datetime = NaiveDateTime::from_timestamp(1643620800, 0);
     let filename = format!("{}.csv", file_name);
 
-    // let mut file = File::create("data.csv")?;
     let mut file = File::create(&filename)?;
     writeln!(
         file,
@@ -124,6 +126,15 @@ fn generate_csv_file(n: i32, file_name:String) -> Result<(), Box<dyn Error>> {
     Ok(())
 }
 
+fn generate_headers(name:&String) -> PathBuf {
+    let mut file = File::create(name).unwrap();
+    // let file_writer = BufWriter::new(File::create(name).unwrap());
+    let headers = "string_col,char_col,int_col,float_col,bool_col,date_col,datetime_col";
+    // write the headers
+    writeln!(file, "{}", headers).unwrap();
+    return PathBuf::from(name)
+}
+
 
 fn main() {
     let args = Args::parse();
@@ -133,8 +144,13 @@ fn main() {
     // concurrency test
     let num_threads = 4;
     let rows_per_thread = rows/num_threads;
+    // create the headers
+    let file_path = generate_headers(name);
     // create a shared mutable state for the file
-    let file_writer = Arc::new(Mutex::new(BufWriter::new(File::create(name).unwrap())));
+    let append_file = OpenOptions::new().write(true).append(true).open(file_path).unwrap();
+    let file_writer = Arc::new(Mutex::new(BufWriter::new(append_file)));
+
+    // spawn multiple threads to create the file
     let mut handles = Vec::new();
     for i in 0..num_threads {
         let file_writer_clone = file_writer.clone();
@@ -153,7 +169,6 @@ fn main() {
                 let row = format!("{},{},{},{},{},{},{}\n", string_val, char_val, int_val, float_val, bool_val, date_val, datetime_val);
                 let mut file_writer = file_writer_clone.lock().unwrap();
                 file_writer.write(row.as_bytes()).unwrap();
-
             }
         }));
     }
@@ -164,5 +179,4 @@ fn main() {
     // Flush the file writer to make sure all data is written to disk
     let mut file_writer = file_writer.lock().unwrap();
     file_writer.flush().unwrap();
-    // generate_csv_file(rows, name.to_string());
 }

@@ -12,17 +12,17 @@ use std::thread;
 
 #[derive(Parser, Debug)]
 struct Args {
-    #[arg(short = 'r', long = "rows", value_name = "ROWS")]
+    #[arg(short = 'r', long = "rows", value_name = "ROWS", help = "Number of rows to generate")]
     rows: i32,
     
-    #[arg(short = 'n', long = "name", value_name = "NAME")]
+    #[arg(short = 'n', long = "name", value_name = "NAME", help = "The name of the file to make")]
     name: String,
 
-    #[arg(short = 'm', long = "multiple", value_name = "MULTIPLE", required = false)]
+    #[arg(short = 'm', long = "multiple", value_name = "MULTIPLE", required = false, help = "The number of files to be created")]
     multiple: Option<i32>,
 
-    #[arg(short = 't', long = "threads", value_name = "THREADS", required = false)]
-    threads: Option<u8>
+    #[arg(short = 't', long = "threads", value_name = "THREADS", required = false, help = "The number of threads to use, defaults to 4")]
+    threads: Option<i32>
 
 }
 
@@ -124,8 +124,13 @@ fn main() {
     let rows = *(&args.rows); //convert to i32 
     let name = &args.name; 
 
+    let num_threads = match &args.threads {
+        None => 4,
+        Some(x) => *(Some(x).unwrap())
+    };
+
     // concurrency test
-    let num_threads = 4;
+    // let num_threads = 4;
     let rows_per_thread = rows/num_threads;
     // create the headers
     let file_path = generate_headers(name);

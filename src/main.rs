@@ -18,8 +18,12 @@ struct Args {
     #[arg(short = 'n', long = "name", value_name = "NAME")]
     name: String,
 
-    // #[arg(short = 'm', long = "multiple", value_name = "MULTIPLE", required = true)]
-    // multiple: i32
+    #[arg(short = 'm', long = "multiple", value_name = "MULTIPLE", required = false)]
+    multiple: Option<i32>,
+
+    #[arg(short = 't', long = "threads", value_name = "THREADS", required = false)]
+    threads: Option<u8>
+
 }
 
 // Generate a random string of length 'len'
@@ -73,33 +77,8 @@ fn generate_csv_file(n: i32, file_name:String) -> Result<(), Box<dyn Error>> {
     let end_datetime = NaiveDateTime::from_timestamp(1643620800, 0);
     let filename = format!("{}.csv", file_name);
 
-    let mut file = File::create(&filename)?;
-    writeln!(
-        file,
-        "string_col,char_col,int_col,float_col,bool_col,date_col,datetime_col"
-    )?;
-    for _ in 0..n {
-        let string_val = generate_random_string(10);
-        let char_val = generate_random_char();
-        let int_val = generate_random_int(1, 100);
-        let float_val = generate_random_float(0.0, 1.0);
-        let bool_val = generate_random_bool();
-        let date_val = generate_random_date(start_date, end_date);
-        let datetime_val = generate_random_datetime(start_datetime, end_datetime);
-
-        writeln!(
-            file,
-            "{},{},{},{},{},{},{}",
-            string_val,
-            char_val,
-            int_val,
-            float_val,
-            bool_val,
-            date_val,
-            datetime_val
-        );
-    }
-
+    // let mut file = File::create(&filename)?;
+    let mut file_writer = BufWriter::new(File::create(&file_name).unwrap());
 
     for _ in 0..n {
         let string_val = generate_random_string(10);
@@ -110,18 +89,22 @@ fn generate_csv_file(n: i32, file_name:String) -> Result<(), Box<dyn Error>> {
         let date_val = generate_random_date(start_date, end_date);
         let datetime_val = generate_random_datetime(start_datetime, end_datetime);
 
-        writeln!(
-            file,
-            "{},{},{},{},{},{},{}",
-            string_val,
-            char_val,
-            int_val,
-            float_val,
-            bool_val,
-            date_val,
-            datetime_val
-        )?;
+        // writeln!(
+        //     file,
+        //     "{},{},{},{},{},{},{}",
+        //     string_val,
+        //     char_val,
+        //     int_val,
+        //     float_val,
+        //     bool_val,
+        //     date_val,
+        //     datetime_val
+        // );
+
+        let row = format!("{},{},{},{},{},{},{}\n", string_val, char_val, int_val, float_val, bool_val, date_val, datetime_val);
+        file_writer.write(row.as_bytes()).unwrap();
     }
+    file_writer.flush().unwrap();
 
     Ok(())
 }

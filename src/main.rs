@@ -1,6 +1,6 @@
 use clap::Parser; 
 use chrono::{NaiveDate, NaiveDateTime};
-use std::fs::{File, OpenOptions};
+use std::fs::{OpenOptions};
 use std::io::{Write, BufWriter};
 use std::sync::{Arc, Mutex};
 use std::thread;
@@ -18,8 +18,6 @@ fn main() {
         Some(x) => *(Some(x).unwrap())
     };
 
-    // concurrency test
-    // let num_threads = 4;
     let rows_per_thread = rows/num_threads;
     // create the headers
     let file_path = fns::generate_headers(name);

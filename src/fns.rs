@@ -1,5 +1,5 @@
 use chrono::{Duration, NaiveDate, NaiveDateTime};
-use rand::distributions::{Distribution, Uniform};
+use rand::distributions::{Uniform};
 use rand::{thread_rng, Rng};
 use std::error::Error;
 use std::fs::{File};
@@ -56,9 +56,8 @@ pub fn generate_csv_file(n: i32, file_name:String) -> Result<(), Box<dyn Error>>
     let end_date = NaiveDate::from_ymd(2023, 12, 31);
     let start_datetime = NaiveDateTime::from_timestamp(1640995200, 0);
     let end_datetime = NaiveDateTime::from_timestamp(1643620800, 0);
-    let filename = format!("{}.csv", file_name);
+    let _filename = format!("{}.csv", file_name);
 
-    // let mut file = File::create(&filename)?;
     let mut file_writer = BufWriter::new(File::create(&file_name).unwrap());
 
     for _ in 0..n {
@@ -81,7 +80,6 @@ pub fn generate_csv_file(n: i32, file_name:String) -> Result<(), Box<dyn Error>>
 
 pub fn generate_headers(name:&String) -> PathBuf {
     let mut file = File::create(name).unwrap();
-    // let file_writer = BufWriter::new(File::create(name).unwrap());
     let headers = "string_col,char_col,int_col,float_col,bool_col,date_col,datetime_col";
     // write the headers
     writeln!(file, "{}", headers).unwrap();

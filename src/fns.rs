@@ -2,12 +2,10 @@ use chrono::{Duration, NaiveDate, NaiveDateTime};
 use rand::distributions::{Distribution, Uniform};
 use rand::{thread_rng, Rng};
 use std::error::Error;
-use std::fs::{File, OpenOptions};
+use std::fs::{File};
 use std::io::{Write, BufWriter};
 use std::path::PathBuf;
 
-use std::sync::{Arc, Mutex};
-use std::thread;
 
 // Generate a random string of length 'len'
 pub fn generate_random_string(len: usize) -> String {

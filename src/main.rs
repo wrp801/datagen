@@ -9,6 +9,24 @@ mod fns;
 mod args;
 
 fn main() {
+    let cli = args::Cli::parse();
+
+    match &cli.command {
+        Some(args::Commands(Create(name))) => {
+            // check the rows
+            match name.rows {
+                Some(x) => *(Some(x).unwrap()),
+                None => {
+                    println!("Please provide the number of rows");
+                    exit(1);
+                };
+            }
+        }
+    }
+
+
+
+
     let args = args::Args::parse();
     let rows = *(&args.rows); //convert to i32 
     let name = &args.name; 
@@ -21,6 +39,7 @@ fn main() {
     let rows_per_thread = rows/num_threads;
     // create the headers
     let file_path = fns::generate_headers(name);
+
     // create a shared mutable state for the file
     let append_file = OpenOptions::new().write(true).append(true).open(file_path).unwrap();
     let file_writer = Arc::new(Mutex::new(BufWriter::new(append_file)));

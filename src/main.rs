@@ -1,9 +1,10 @@
 use clap::Parser; 
 use chrono::{NaiveDate, NaiveDateTime};
-use std::fs::{OpenOptions};
+use std::fs::OpenOptions;
 use std::io::{Write, BufWriter};
 use std::sync::{Arc, Mutex};
 use std::thread;
+use std::process;
 
 mod fns;
 mod args;
@@ -12,29 +13,53 @@ fn main() {
     let cli = args::Cli::parse();
 
     match &cli.command {
-        Some(args::Commands(Create(name))) => {
+        Some(args::Commands::Create(name)) => {
             // check the rows
             match name.rows {
-                Some(x) => *(Some(x).unwrap()),
+                Some(x) => {let rows = *(&Some(x).unwrap());},
+                None => {panic!("Error: need a number of rows to generate");}
+            };
+            match name.filename {
+                Some(f) => {let name = &(Some(f).unwrap());},
                 None => {
-                    println!("Please provide the number of rows");
-                    exit(1);
-                };
-            }
+                    let name = "sample";
+                }
+            };
+            // match the rest of the commands
+            match name.multiple {
+                Some(m) => {let n_files = *(&Some(m).unwrap());},
+                None  => {println!("Only writing 1 file");}
+            };
+            match name.file_type {
+                Some(t) => {let file_type = &(Some(t).unwrap());},
+                None => {
+                    // if no file type is provided then set it to a csv
+                    println!("Setting file type to csv");
+                    let file_type = "csv";}
+
+            };
+            match name.threads {
+                Some(h) => {let num_threads = *(&Some(h).unwrap());},
+                None => {let num_threads = 4;}
+
+            };
+
+            
         }
-    }
-
-
-
-
-    let args = args::Args::parse();
-    let rows = *(&args.rows); //convert to i32 
-    let name = &args.name; 
-
-    let num_threads = match &args.threads {
-        None => 4,
-        Some(x) => *(Some(x).unwrap())
+        None => {panic!("Please provide a command");}
     };
+
+
+
+
+    // let args = args::Args::parse();
+    // let rows = *(&args.rows); //convert to i32 
+    // let name = &args.name; 
+
+    // let num_threads = match &args.threads {
+    //     None => 4,
+    //     Some(x) => *(Some(x).unwrap())
+    // };
 
     let rows_per_thread = rows/num_threads;
     // create the headers

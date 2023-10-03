@@ -1,8 +1,8 @@
 use chrono::{Duration, NaiveDate, NaiveDateTime};
-use rand::distributions::{Uniform};
+use rand::distributions::Uniform;
 use rand::{thread_rng, Rng};
 use std::error::Error;
-use std::fs::{File};
+use std::fs::File;
 use std::io::{Write, BufWriter};
 use std::path::PathBuf;
 

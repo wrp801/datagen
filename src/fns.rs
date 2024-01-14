@@ -3,9 +3,8 @@ use rand::distributions::Uniform;
 use rand::{thread_rng, Rng};
 use std::error::Error;
 use std::fs::File;
-use std::io::{Write, BufWriter};
+use std::io::{BufWriter, Write};
 use std::path::PathBuf;
-
 
 // Generate a random string of length 'len'
 pub fn generate_random_string(len: usize) -> String {
@@ -19,10 +18,9 @@ pub fn generate_random_string(len: usize) -> String {
 // Generate a random character
 pub fn generate_random_char() -> char {
     // choose a random character from the ascii table then convert it
-   let num =  rand::thread_rng()
-        .gen_range(97..=122);
+    let num = rand::thread_rng().gen_range(97..=122);
 
-   return char::from_u32(num).unwrap()
+    return char::from_u32(num).unwrap();
 }
 
 // Generate a random integer in the range [min, max]
@@ -51,7 +49,7 @@ pub fn generate_random_datetime(start: NaiveDateTime, end: NaiveDateTime) -> Nai
     start + Duration::seconds(thread_rng().gen_range(0..=secs + 1))
 }
 // Generate 'n' rows of random data and write to a CSV file
-pub fn generate_csv_file(n: i32, file_name:String) -> Result<(), Box<dyn Error>> {
+pub fn generate_csv_file(n: i32, file_name: String) -> Result<(), Box<dyn Error>> {
     let start_date = NaiveDate::from_ymd(2022, 1, 1);
     let end_date = NaiveDate::from_ymd(2023, 12, 31);
     let start_datetime = NaiveDateTime::from_timestamp(1640995200, 0);
@@ -69,8 +67,10 @@ pub fn generate_csv_file(n: i32, file_name:String) -> Result<(), Box<dyn Error>>
         let date_val = generate_random_date(start_date, end_date);
         let datetime_val = generate_random_datetime(start_datetime, end_datetime);
 
-
-        let row = format!("{},{},{},{},{},{},{}\n", string_val, char_val, int_val, float_val, bool_val, date_val, datetime_val);
+        let row = format!(
+            "{},{},{},{},{},{},{}\n",
+            string_val, char_val, int_val, float_val, bool_val, date_val, datetime_val
+        );
         file_writer.write(row.as_bytes()).unwrap();
     }
     file_writer.flush().unwrap();
@@ -78,11 +78,10 @@ pub fn generate_csv_file(n: i32, file_name:String) -> Result<(), Box<dyn Error>>
     Ok(())
 }
 
-pub fn generate_headers(name:&String) -> PathBuf {
+pub fn generate_headers(name: &String) -> PathBuf {
     let mut file = File::create(name).unwrap();
     let headers = "string_col,char_col,int_col,float_col,bool_col,date_col,datetime_col";
     // write the headers
     writeln!(file, "{}", headers).unwrap();
-    return PathBuf::from(name)
+    return PathBuf::from(name);
 }
-

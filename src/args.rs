@@ -1,58 +1,40 @@
-use clap::Parser; 
-use clap::{Subcommand, Args};
+use clap::Parser;
+use clap::{Args, Subcommand};
 
-#[derive(Parser)]
+#[derive(Debug, Parser)]
+#[clap(name = "datagen", version)]
 pub struct Cli {
-    #[command(subcommand)]
-    command: Option<Commands>
+    #[clap(subcommand)]
+    pub command: Commands,
 }
 
-// #[derive(Parser, Debug)]
-// pub struct Args {
-//     #[arg(short = 'r', long = "rows", value_name = "ROWS", help = "Number of rows to generate")]
-//     pub rows: i32,
-    
-//     #[arg(short = 'n', long = "name", value_name = "NAME", help = "The name of the file to make")]
-//     pub name: String,
-
-//     #[arg(short = 'm', long = "multiple", value_name = "MULTIPLE", required = false, help = "The number of files to be created")]
-//     pub multiple: Option<i32>,
-
-//     #[arg(short = 't', long = "threads", value_name = "THREADS", required = false, help = "The number of threads to use, defaults to 4")]
-//     pub threads: Option<i32>
-// }
-
-
-#[derive(Parser, Debug, Subcommand)]
+#[derive(Debug, Subcommand)]
 pub enum Commands {
     /// Create a randomly generated csv file
-    Create(Create),
+    Create(CreateArgs),
     // Convert(Convert),
 }
 
-#[derive(Parser,Args)]
-pub struct Create {
-    #[arg(short = 'r', long = "rows", value_name = "ROWS", help = "Number of rows to generate")]
+#[derive(Debug,Parser)]
+pub struct CreateArgs {
+    /// Number of rows to generate
+    #[arg(short = 'r', long = "rows")]
     pub rows: i32,
-    
-    #[arg(short = 'f', long = "filename", value_name = "FILENAME", help = "The name of the file to make. Defaults to sample")]
-    pub name: Option<String>,
 
-    #[arg(short = 'm', long = "multiple", value_name = "MULTIPLE", required = false, help = "The number of files to be created")]
+    /// The name of the file to make. Defaults to sample
+    #[arg(short = 'f', long = "filename")]
+    pub name: String,
+
+    /// The number of files to be created
+    #[arg(short = 'm', long = "multiple", required = false)]
     pub multiple: Option<i32>,
 
-    #[arg(short = 't', long = "threads", value_name = "THREADS", required = false, default_value = 4 ,help = "The number of threads to use, defaults to 4")]
+    /// The number of threads to use, defaults to 4
+    #[arg(short = 't', long = "threads", required = false)]
     pub threads: Option<i32>,
 
-    #[arg(short = 'y', long = "file-type", value_name = "FILETYPE", required = false, default_value = "csv", help = "The file type to be written, defaults to csv")]
-    pub file_type: String
+    /// The file type to be written, defaults to csv
+    #[arg(short = 'y', long = "file-type", required = false)]
+    pub file_type: Option<String>,
 }
-
-
-#[derive(Parser,Args)]
-pub struct Convert {
-    #[arg(short = 'f', long = "filename", value_name = "FILENAME", help = "The name of the file to make")]
-    pub name: Option<String>,
-}
-
 

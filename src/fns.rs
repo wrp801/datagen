@@ -3,8 +3,11 @@ use rand::distributions::Uniform;
 use rand::{thread_rng, Rng};
 use std::error::Error;
 use std::fs::File;
+use std::fs::OpenOptions;
 use std::io::{BufWriter, Write};
 use std::path::PathBuf;
+use std::sync::{Arc, Mutex};
+use std::thread;
 
 // Generate a random string of length 'len'
 pub fn generate_random_string(len: usize) -> String {
@@ -50,10 +53,10 @@ pub fn generate_random_datetime(start: NaiveDateTime, end: NaiveDateTime) -> Nai
 }
 // Generate 'n' rows of random data and write to a CSV file
 pub fn generate_csv_file(n: i32, file_name: String) -> Result<(), Box<dyn Error>> {
-    let start_date = NaiveDate::from_ymd(2022, 1, 1);
-    let end_date = NaiveDate::from_ymd(2023, 12, 31);
-    let start_datetime = NaiveDateTime::from_timestamp(1640995200, 0);
-    let end_datetime = NaiveDateTime::from_timestamp(1643620800, 0);
+    let start_date = NaiveDate::from_ymd_opt(2022, 1, 1).unwrap();
+    let end_date = NaiveDate::from_ymd_opt(2023, 12, 31).unwrap();
+    let start_datetime = NaiveDateTime::from_timestamp_opt(1640995200, 0).unwrap();
+    let end_datetime = NaiveDateTime::from_timestamp_opt(1643620800, 0).unwrap();
     let _filename = format!("{}.csv", file_name);
 
     let mut file_writer = BufWriter::new(File::create(&file_name).unwrap());
@@ -84,4 +87,62 @@ pub fn generate_headers(name: &String) -> PathBuf {
     // write the headers
     writeln!(file, "{}", headers).unwrap();
     return PathBuf::from(name);
+}
+
+pub fn generate_file(rows: i32, file_name: String, n_threads: i32) -> Result<(), Box<dyn Error>> {
+    let rows_per_thread = rows / n_threads;
+    // create the headers
+    let file_path = generate_headers(&file_name);
+    // create a shared mutable state for the file
+    let append_file = OpenOptions::new()
+        .write(true)
+        .append(true)
+        .open(file_path)
+        .unwrap();
+    let file_writer = Arc::new(Mutex::new(BufWriter::new(append_file)));
+
+    // spawn multiple threads to create the file
+    let mut handles = Vec::new();
+    for i in 0..n_threads {
+        let file_writer_clone = file_writer.clone();
+        let start = i * rows_per_thread;
+        let end = if i == n_threads - 1 {
+            rows
+        } else {
+            start + rows_per_thread
+        };
+        handles.push(thread::spawn(move || {
+            for _ in start..end {
+                let string_val = generate_random_string(10);
+                let char_val = generate_random_char();
+                let int_val = generate_random_int(1, 100);
+                let float_val = generate_random_float(0.0, 1.0);
+                let bool_val = generate_random_bool();
+                let date_val = generate_random_date(
+                    NaiveDate::from_ymd_opt(2022, 1, 1).unwrap(),
+                    NaiveDate::from_ymd_opt(2023, 12, 31).unwrap(),
+                );
+                let datetime_val = generate_random_datetime(
+                    NaiveDateTime::from_timestamp_opt(1640995200, 0).unwrap(),
+                    NaiveDateTime::from_timestamp_opt(1643620800, 0).unwrap(),
+                );
+
+                let row = format!(
+                    "{},{},{},{},{},{},{}\n",
+                    string_val, char_val, int_val, float_val, bool_val, date_val, datetime_val
+                );
+                let mut file_writer = file_writer_clone.lock().unwrap();
+                file_writer.write(row.as_bytes()).unwrap();
+            }
+        }));
+    }
+    for handle in handles {
+        handle.join().unwrap();
+    }
+
+    // Flush the file writer to make sure all data is written to disk
+    let mut file_writer = file_writer.lock().unwrap();
+    file_writer.flush().unwrap();
+
+    Ok(())
 }

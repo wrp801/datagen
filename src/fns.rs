@@ -51,35 +51,6 @@ pub fn generate_random_datetime(start: NaiveDateTime, end: NaiveDateTime) -> Nai
     let secs = (end - start).num_seconds();
     start + Duration::seconds(thread_rng().gen_range(0..=secs + 1))
 }
-// Generate 'n' rows of random data and write to a CSV file
-pub fn generate_csv_file(n: i32, file_name: String) -> Result<(), Box<dyn Error>> {
-    let start_date = NaiveDate::from_ymd_opt(2022, 1, 1).unwrap();
-    let end_date = NaiveDate::from_ymd_opt(2023, 12, 31).unwrap();
-    let start_datetime = NaiveDateTime::from_timestamp_opt(1640995200, 0).unwrap();
-    let end_datetime = NaiveDateTime::from_timestamp_opt(1643620800, 0).unwrap();
-    let _filename = format!("{}.csv", file_name);
-
-    let mut file_writer = BufWriter::new(File::create(&file_name).unwrap());
-
-    for _ in 0..n {
-        let string_val = generate_random_string(10);
-        let char_val = generate_random_char();
-        let int_val = generate_random_int(1, 100);
-        let float_val = generate_random_float(0.0, 1.0);
-        let bool_val = generate_random_bool();
-        let date_val = generate_random_date(start_date, end_date);
-        let datetime_val = generate_random_datetime(start_datetime, end_datetime);
-
-        let row = format!(
-            "{},{},{},{},{},{},{}\n",
-            string_val, char_val, int_val, float_val, bool_val, date_val, datetime_val
-        );
-        file_writer.write(row.as_bytes()).unwrap();
-    }
-    file_writer.flush().unwrap();
-
-    Ok(())
-}
 
 pub fn generate_headers(name: &String) -> PathBuf {
     let mut file = File::create(name).unwrap();
@@ -89,10 +60,14 @@ pub fn generate_headers(name: &String) -> PathBuf {
     return PathBuf::from(name);
 }
 
-pub fn generate_file(rows: i32, file_name: String, n_threads: i32) -> Result<(), Box<dyn Error>> {
-    let rows_per_thread = rows / n_threads;
+pub fn generate_csv_file(
+    rows: &i32,
+    file_name: &String,
+    n_threads: &i32,
+) -> Result<(), Box<dyn Error>> {
+    let rows_per_thread = *rows / *n_threads;
     // create the headers
-    let file_path = generate_headers(&file_name);
+    let file_path = generate_headers(file_name);
     // create a shared mutable state for the file
     let append_file = OpenOptions::new()
         .write(true)
@@ -103,11 +78,11 @@ pub fn generate_file(rows: i32, file_name: String, n_threads: i32) -> Result<(),
 
     // spawn multiple threads to create the file
     let mut handles = Vec::new();
-    for i in 0..n_threads {
+    for i in 0..(*n_threads) {
         let file_writer_clone = file_writer.clone();
         let start = i * rows_per_thread;
-        let end = if i == n_threads - 1 {
-            rows
+        let end = if i == *(n_threads) - 1 {
+            *rows
         } else {
             start + rows_per_thread
         };

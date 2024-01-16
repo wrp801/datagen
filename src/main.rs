@@ -5,9 +5,7 @@ use args::Commands;
 use clap::Parser;
 use log::info;
 
-use fns::generate_csv_file;
-
-use crate::fns::convert_csv_to_parquet;
+use fns::{convert_csv_to_parquet, generate_csv_file};
 
 fn main() {
     env_logger::init();

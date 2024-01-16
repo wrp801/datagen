@@ -126,11 +126,11 @@ pub fn generate_csv_file(
     Ok(())
 }
 
-pub fn convert_csv_to_parquet(csv_path:&String, parquet_file_name:&String) {
+pub fn convert_csv_to_parquet(csv_path: &String, parquet_file_name: &String) {
     let parq_file_name = format!("{}", *parquet_file_name);
     // create the parquet file
     let mut parq_file = File::create(parq_file_name).unwrap();
-    let mut df:DataFrame = CsvReader::from_path(csv_path)
+    let mut df: DataFrame = CsvReader::from_path(csv_path)
         .unwrap()
         .has_header(true)
         .with_try_parse_dates(true)
@@ -138,6 +138,4 @@ pub fn convert_csv_to_parquet(csv_path:&String, parquet_file_name:&String) {
         .unwrap();
 
     let _ = ParquetWriter::new(&mut parq_file).finish(&mut df);
-
 }
-

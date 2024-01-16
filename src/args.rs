@@ -12,7 +12,7 @@ pub struct Cli {
 pub enum Commands {
     /// Create a randomly generated csv file
     Create(CreateArgs),
-    // Convert(Convert),
+    // Convert(ConvertArgs),
 }
 
 #[derive(Debug, Parser)]
@@ -33,7 +33,7 @@ pub struct CreateArgs {
     #[clap(short = 't', long = "threads", required = false)]
     pub threads: Option<i32>,
 
-    /// The file type to be written, defaults to csv
+    /// The file type to be written (options are xlsx, csv, and parquet), defaults to csv
     #[clap(short = 'y', long = "file-type", required = false)]
     pub file_type: Option<String>,
 }

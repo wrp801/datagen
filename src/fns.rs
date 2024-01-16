@@ -1,4 +1,5 @@
 use chrono::{Duration, NaiveDate, NaiveDateTime};
+use polars::prelude::DataFrame;
 use rand::distributions::Uniform;
 use rand::{thread_rng, Rng};
 use std::error::Error;
@@ -8,6 +9,9 @@ use std::io::{BufWriter, Write};
 use std::path::PathBuf;
 use std::sync::{Arc, Mutex};
 use std::thread;
+// use polars::prelude::*;
+use polars_core::prelude::*;
+use polars_io::prelude::*;
 
 // Generate a random string of length 'len'
 pub fn generate_random_string(len: usize) -> String {
@@ -121,3 +125,19 @@ pub fn generate_csv_file(
 
     Ok(())
 }
+
+pub fn convert_csv_to_parquet(csv_path:&String, parquet_file_name:&String) {
+    let parq_file_name = format!("{}", *parquet_file_name);
+    // create the parquet file
+    let mut parq_file = File::create(parq_file_name).unwrap();
+    let mut df:DataFrame = CsvReader::from_path(csv_path)
+        .unwrap()
+        .has_header(true)
+        .with_try_parse_dates(true)
+        .finish()
+        .unwrap();
+
+    let _ = ParquetWriter::new(&mut parq_file).finish(&mut df);
+
+}
+

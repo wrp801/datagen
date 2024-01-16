@@ -3,9 +3,15 @@ mod fns;
 
 use args::Commands;
 use clap::Parser;
+use log::info;
+
+
 use fns::generate_csv_file;
 
+use crate::fns::convert_csv_to_parquet;
+
 fn main() {
+    env_logger::init();
     let cli = args::Cli::parse();
 
     match cli.command {
@@ -16,19 +22,48 @@ fn main() {
             let num_threads = args.threads.unwrap_or(4);
             let file_type = args.file_type.unwrap_or(String::from("csv"));
             let file_name = format!("{}.{}", name, file_type);
+            let csv_file_name = format!("{}.csv", name);
 
             if n_files > 1 {
                 for i in 1..n_files + 1 {
-                    let new_file_name = format!("{}_{}.{}", name, i, file_type);
-                    if let Ok(()) = generate_csv_file(&rows, &new_file_name, &num_threads) {
-                        println!("File {} successfully created", new_file_name);
+                    // let new_file_name = format!("{}_{}.{}", name, i, file_type);
+                    let csv_file_path = format!("{}_{}.csv", name, i);
+                    if let Ok(()) = generate_csv_file(&rows, &csv_file_path, &num_threads) {
+                        if file_type == "csv" {
+                            println!("CSV file {} successfully created", csv_file_path);
+                        }
+                        else {
+                            let parq_file_name = format!("{}_{}.parquet", name,i);
+                            convert_csv_to_parquet(&csv_file_path, &parq_file_name);
+                            if let Ok(()) = std::fs::remove_file(csv_file_path) {
+                                println!("Successfully created parquet file {} of {} with {} rows",i, n_files, rows);
+                            }
+
+                        }
                     }
                 }
-            } else {
-                if let Ok(()) = generate_csv_file(&rows, &file_name, &num_threads) {
-                    println!("File sucessfully created");
+            } else {  
+                if let Ok(()) = generate_csv_file(&rows, &csv_file_name, &num_threads) {
+                   println!("CSV created successfully with {} rows", rows);
+                   if file_type == "csv" {
+
+                   }
+                    else if file_type == "parquet" {
+                        // convert to parquet and remove the csv
+                        let parq_file_name = format!("{}.parquet", name);
+                        convert_csv_to_parquet(&csv_file_name, &parq_file_name);
+                        // delete the csv
+                        if let Ok(()) = std::fs::remove_file(csv_file_name) {
+                            println!("Successfully created parquet file with {} rows", rows);
+                        }
+                        
+                    }
+
                 }
+
             }
         }
     }
+
+
 }

@@ -12,7 +12,7 @@ pub struct Cli {
 pub enum Commands {
     /// Create a randomly generated csv file
     Create(CreateArgs),
-    // Convert(ConvertArgs),
+    Convert(ConvertArgs),
 }
 
 #[derive(Debug, Parser)]
@@ -37,3 +37,15 @@ pub struct CreateArgs {
     #[clap(short = 'y', long = "file-type", required = false)]
     pub file_type: Option<String>,
 }
+
+#[derive(Debug, Parser)]
+pub struct ConvertArgs {
+    /// The name of the source file to convert
+    #[clap(short = 's', long = "source")]
+    pub source: String,
+
+    #[clap(short = 'y', long = "file-type")]
+    pub file_type: String
+
+}
+

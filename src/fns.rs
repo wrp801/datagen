@@ -126,6 +126,7 @@ pub fn generate_csv_file(
     Ok(())
 }
 
+/// Converts a CSV on disk to Parquet
 pub fn convert_csv_to_parquet(csv_path: &String, parquet_file_name: &String) {
     let parq_file_name = format!("{}", *parquet_file_name);
     // create the parquet file

@@ -4,6 +4,7 @@ mod fns;
 use args::Commands;
 use clap::Parser;
 use log::info;
+use std::{fs, path::Path, ffi::OsStr, string::String};
 
 use fns::{convert_csv_to_parquet, generate_csv_file};
 
@@ -28,7 +29,7 @@ fn main() {
                     if let Ok(()) = generate_csv_file(&rows, &csv_file_path, &num_threads) {
                         if file_type == "csv" {
                             println!("CSV file {} successfully created", csv_file_path);
-                        } else {
+                        } else if file_type == "parquet" {
                             let parq_file_name = format!("{}_{}.parquet", name, i);
                             convert_csv_to_parquet(&csv_file_path, &parq_file_name);
                             if let Ok(()) = std::fs::remove_file(csv_file_path) {
@@ -55,6 +56,43 @@ fn main() {
                     }
                 }
             }
+        },
+        // handle the convert command
+        Commands::Convert(args) => {
+            let source = args.source;
+            let file_type = args.file_type;
+            let source_str = source.to_owned();
+
+            let extension = Path::new(&source_str)
+                .extension()
+                .and_then(OsStr::to_str)
+                .unwrap();
+
+            let file_name = Path::new(&source_str)
+                .file_name()
+                .and_then(OsStr::to_str)
+                .unwrap();
+
+            let file_name_string = file_name.to_string();
+
+
+            match extension {
+                "csv" => {
+                    // convert the csv to parquet
+                    if file_type == "parquet" {
+                        convert_csv_to_parquet(&source, &file_name_string);
+                    }
+                },
+                "parquet"  => {
+
+                },
+                _ => {
+                    panic!("Error: Unsupported file type. Options for conversion are csv or parquet")
+                }
+
+
+            }
+
         }
     }
 }

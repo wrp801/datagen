@@ -1,5 +1,5 @@
 use chrono::{Duration, NaiveDate, NaiveDateTime};
-use polars::prelude::DataFrame;
+use polars::prelude::{DataFrame, LazyFrame};
 use rand::distributions::Uniform;
 use rand::{thread_rng, Rng};
 use std::error::Error;
@@ -127,7 +127,7 @@ pub fn generate_csv_file(
 }
 
 /// Converts a CSV on disk to Parquet
-pub fn convert_csv_to_parquet(csv_path: &String, parquet_file_name: &String) {
+pub fn convert_csv_to_parquet(csv_path: &String, parquet_file_name: &String) -> Result<(), Box<dyn Error>>{
     let parq_file_name = format!("{}", *parquet_file_name);
     // create the parquet file
     let mut parq_file = File::create(parq_file_name).unwrap();
@@ -139,4 +139,16 @@ pub fn convert_csv_to_parquet(csv_path: &String, parquet_file_name: &String) {
         .unwrap();
 
     let _ = ParquetWriter::new(&mut parq_file).finish(&mut df);
+    Ok(())
+}
+
+pub fn convert_parquet_to_csv(parquet_path: &String, csv_file_name: &String) -> Result<(), Box<dyn Error>> {
+    let csv_file_name = format!("{}", *csv_file_name);
+    // create the parquet file
+    let mut csv_file = File::create(csv_file_name).unwrap();
+    let mut df = LazyFrame::scan_parquet(parquet_path, Default::default())?
+        .collect()
+        .unwrap();
+    let _ = CsvWriter::new(&mut csv_file).finish(&mut df);
+    Ok(())
 }

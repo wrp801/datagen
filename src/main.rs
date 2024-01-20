@@ -6,7 +6,7 @@ use clap::Parser;
 use log::info;
 use std::{fs, path::Path, ffi::OsStr, string::String};
 
-use fns::{convert_csv_to_parquet, generate_csv_file};
+use fns::{convert_csv_to_parquet, generate_csv_file, convert_parquet_to_csv};
 
 fn main() {
     env_logger::init();
@@ -31,12 +31,14 @@ fn main() {
                             println!("CSV file {} successfully created", csv_file_path);
                         } else if file_type == "parquet" {
                             let parq_file_name = format!("{}_{}.parquet", name, i);
-                            convert_csv_to_parquet(&csv_file_path, &parq_file_name);
-                            if let Ok(()) = std::fs::remove_file(csv_file_path) {
-                                println!(
-                                    "Successfully created parquet file {} of {} with {} rows",
-                                    i, n_files, rows
-                                );
+                            if let Ok(()) = convert_csv_to_parquet(&csv_file_path, &parq_file_name) {
+                                println!("Successfully created parquet file {}", parq_file_name);
+                                if let Ok(()) = std::fs::remove_file(csv_file_path) {
+                                    println!(
+                                        "Successfully created parquet file {} of {} with {} rows",
+                                        i, n_files, rows
+                                    );
+                            }
                             }
                         }
                     }
@@ -86,11 +88,19 @@ fn main() {
                     // convert the csv to parquet
                     if file_type == "parquet" {
                         let parq_name = format!("{}.parquet", file_name_no_extension_string);
-                        convert_csv_to_parquet(&source, &parq_name);
+                        if let Ok(()) = convert_csv_to_parquet(&source, &parq_name) {
+                            println!("Successfully converted {} to {}", source, parq_name);
+                        }
                     }
                 },
                 "parquet"  => {
-
+                    // convert the parquet to csv
+                    if file_type == "csv" {
+                        let csv_name = format!("{}.csv", file_name_no_extension_string);
+                        if let Ok(()) = convert_parquet_to_csv(&source, &csv_name) {
+                            println!("Successfully converted {} to {}", source, csv_name);
+                        }
+                    }
                 },
                 _ => {
                     panic!("Error: Unsupported file type. Options for conversion are csv or parquet")

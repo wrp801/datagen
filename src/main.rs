@@ -75,12 +75,18 @@ fn main() {
 
             let file_name_string = file_name.to_string();
 
+            let file_name_no_extension = Path::new(&source_str)
+                .file_stem()
+                .unwrap();
+
+            let file_name_no_extension_string = file_name_no_extension.to_str().unwrap();
 
             match extension {
                 "csv" => {
                     // convert the csv to parquet
                     if file_type == "parquet" {
-                        convert_csv_to_parquet(&source, &file_name_string);
+                        let parq_name = format!("{}.parquet", file_name_no_extension_string);
+                        convert_csv_to_parquet(&source, &parq_name);
                     }
                 },
                 "parquet"  => {

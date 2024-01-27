@@ -8,4 +8,10 @@ edition = "2021"
 [dependencies]
 chrono = "0.4.24"
 clap = { version = "4.0", features = ["derive"] }
+env_logger = "0.10.1"
+log = "0.4.20"
+polars = { version = "0.36.2", features = ["lazy", "parquet", "dtype-datetime", "dtype-date"] }
+polars-core = "0.36.2"
+polars-io = "0.36.2"
 rand = "0.8.5"
+rustfmt = "0.10.0"

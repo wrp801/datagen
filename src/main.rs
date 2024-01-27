@@ -1,111 +1,114 @@
-use clap::Parser; 
-use chrono::{Duration, NaiveDate, NaiveDateTime};
-use rand::distributions::{Distribution, Standard, Alphanumeric, Uniform};
-use rand::{thread_rng, Rng};
-use std::error::Error;
-use std::fs::File;
-use std::io::{self, Write};
-use std::str::FromStr;
+mod args;
+mod fns;
 
-#[derive(Parser, Debug)]
-struct Args {
-    #[arg(short = 'r', long = "rows", value_name = "ROWS")]
-    rows: i32,
-    
-    #[arg(short = 'n', long = "name", value_name = "NAME")]
-    name: String
-}
+use args::Commands;
+use clap::Parser;
+use log::info;
+use std::{fs, path::Path, ffi::OsStr, string::String};
 
-// Generate a random string of length 'len'
-fn generate_random_string(len: usize) -> String {
-    rand::thread_rng()
-        .sample_iter(Uniform::new(char::from(32), char::from(126)))
-        .take(len)
-        .map(char::from)
-        .collect()
-}
-
-// Generate a random character
-fn generate_random_char() -> char {
-    // choose a random character from the ascii table then convert it
-   let num =  rand::thread_rng()
-        .gen_range(65..=122);
-
-   return char::from_u32(num).unwrap()
-}
-
-// Generate a random integer in the range [min, max]
-fn generate_random_int(min: i32, max: i32) -> i32 {
-    thread_rng().gen_range(min..=max)
-}
-// Generate a random float in the range [min, max)
-fn generate_random_float(min: f64, max: f64) -> f64 {
-    thread_rng().gen_range(min..=max)
-}
-
-// Generate a random boolean
-fn generate_random_bool() -> bool {
-    thread_rng().gen_bool(0.5)
-}
-
-// Generate a random date in the range [start, end]
-fn generate_random_date(start: NaiveDate, end: NaiveDate) -> NaiveDate {
-    let days = (end - start).num_days();
-    start + Duration::days(thread_rng().gen_range(0..=days + 1))
-}
-
-// Generate a random datetime in the range [start, end]
-fn generate_random_datetime(start: NaiveDateTime, end: NaiveDateTime) -> NaiveDateTime {
-    let secs = (end - start).num_seconds();
-    start + Duration::seconds(thread_rng().gen_range(0..=secs + 1))
-}
-
-// Generate 'n' rows of random data and write to a CSV file
-fn generate_csv_file(n: i32, file_name:String) -> Result<(), Box<dyn Error>> {
-    let start_date = NaiveDate::from_ymd(2022, 1, 1);
-    let end_date = NaiveDate::from_ymd(2023, 12, 31);
-    let start_datetime = NaiveDateTime::from_timestamp(1640995200, 0);
-    let end_datetime = NaiveDateTime::from_timestamp(1643620800, 0);
-    let filename = format!("{}.csv", file_name);
-
-    // let mut file = File::create("data.csv")?;
-    let mut file = File::create(&filename)?;
-    writeln!(
-        file,
-        "string,char,int,float,bool,date,datetime"
-    )?;
-
-    for _ in 0..n {
-        let string_val = generate_random_string(10);
-        let char_val = generate_random_char();
-        let int_val = generate_random_int(1, 100);
-        let float_val = generate_random_float(0.0, 1.0);
-        let bool_val = generate_random_bool();
-        let date_val = generate_random_date(start_date, end_date);
-        let datetime_val = generate_random_datetime(start_datetime, end_datetime);
-
-        writeln!(
-            file,
-            "{},{},{},{},{},{},{}",
-            string_val,
-            char_val,
-            int_val,
-            float_val,
-            bool_val,
-            date_val,
-            datetime_val
-        )?;
-    }
-
-    Ok(())
-}
-
+use fns::{convert_csv_to_parquet, generate_csv_file, convert_parquet_to_csv};
 
 fn main() {
-    let args = Args::parse();
-    let rows = *(&args.rows); //convert to i32 
-    let name = &args.name; 
+    env_logger::init();
+    let cli = args::Cli::parse();
 
-    let file_name = String::from_str("mytest").unwrap();
-    generate_csv_file(rows, name.to_string());
+    match cli.command {
+        Commands::Create(args) => {
+            let rows = args.rows;
+            let name = args.name;
+            let n_files = args.multiple.unwrap_or(1);
+            let num_threads = args.threads.unwrap_or(4);
+            let file_type = args.file_type.unwrap_or(String::from("csv"));
+            let file_name = format!("{}.{}", name, file_type);
+            let csv_file_name = format!("{}.csv", name);
+
+            if n_files > 1 {
+                for i in 1..n_files + 1 {
+                    // let new_file_name = format!("{}_{}.{}", name, i, file_type);
+                    let csv_file_path = format!("{}_{}.csv", name, i);
+                    if let Ok(()) = generate_csv_file(&rows, &csv_file_path, &num_threads) {
+                        if file_type == "csv" {
+                            println!("CSV file {} successfully created", csv_file_path);
+                        } else if file_type == "parquet" {
+                            let parq_file_name = format!("{}_{}.parquet", name, i);
+                            if let Ok(()) = convert_csv_to_parquet(&csv_file_path, &parq_file_name) {
+                                println!("Successfully created parquet file {}", parq_file_name);
+                                if let Ok(()) = std::fs::remove_file(csv_file_path) {
+                                    println!(
+                                        "Successfully created parquet file {} of {} with {} rows",
+                                        i, n_files, rows
+                                    );
+                            }
+                            }
+                        }
+                    }
+                }
+            } else {
+                if let Ok(()) = generate_csv_file(&rows, &csv_file_name, &num_threads) {
+                    println!("CSV created successfully with {} rows", rows);
+                    if file_type == "csv" {
+                    } else if file_type == "parquet" {
+                        // convert to parquet and remove the csv
+                        let parq_file_name = format!("{}.parquet", name);
+                        convert_csv_to_parquet(&csv_file_name, &parq_file_name);
+                        // delete the csv
+                        if let Ok(()) = std::fs::remove_file(csv_file_name) {
+                            println!("Successfully created parquet file with {} rows", rows);
+                        }
+                    }
+                }
+            }
+        },
+        // handle the convert command
+        Commands::Convert(args) => {
+            let source = args.source;
+            let file_type = args.file_type;
+            let source_str = source.to_owned();
+
+            let extension = Path::new(&source_str)
+                .extension()
+                .and_then(OsStr::to_str)
+                .unwrap();
+
+            let file_name = Path::new(&source_str)
+                .file_name()
+                .and_then(OsStr::to_str)
+                .unwrap();
+
+            let file_name_string = file_name.to_string();
+
+            let file_name_no_extension = Path::new(&source_str)
+                .file_stem()
+                .unwrap();
+
+            let file_name_no_extension_string = file_name_no_extension.to_str().unwrap();
+
+            match extension {
+                "csv" => {
+                    // convert the csv to parquet
+                    if file_type == "parquet" {
+                        let parq_name = format!("{}.parquet", file_name_no_extension_string);
+                        if let Ok(()) = convert_csv_to_parquet(&source, &parq_name) {
+                            println!("Successfully converted {} to {}", source, parq_name);
+                        }
+                    }
+                },
+                "parquet"  => {
+                    // convert the parquet to csv
+                    if file_type == "csv" {
+                        let csv_name = format!("{}.csv", file_name_no_extension_string);
+                        if let Ok(()) = convert_parquet_to_csv(&source, &csv_name) {
+                            println!("Successfully converted {} to {}", source, csv_name);
+                        }
+                    }
+                },
+                _ => {
+                    panic!("Error: Unsupported file type. Options for conversion are csv or parquet")
+                }
+
+
+            }
+
+        }
+    }
 }

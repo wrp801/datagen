@@ -10,7 +10,6 @@ use std::path::PathBuf;
 use std::sync::{Arc, Mutex};
 use std::thread;
 // use polars::prelude::*;
-use polars_core::prelude::*;
 use polars_io::prelude::*;
 
 // Generate a random string of length 'len'

@@ -1,5 +1,5 @@
 use clap::Parser;
-use clap::{Args, Subcommand};
+use clap::{Subcommand};
 
 #[derive(Debug, Parser)]
 #[clap(name = "datagen", version)]

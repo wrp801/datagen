@@ -3,8 +3,7 @@ mod fns;
 
 use args::Commands;
 use clap::Parser;
-use log::info;
-use std::{fs, path::Path, ffi::OsStr, string::String};
+use std::{path::Path, ffi::OsStr, string::String};
 
 use fns::{convert_csv_to_parquet, generate_csv_file, convert_parquet_to_csv};
 
@@ -19,7 +18,6 @@ fn main() {
             let n_files = args.multiple.unwrap_or(1);
             let num_threads = args.threads.unwrap_or(4);
             let file_type = args.file_type.unwrap_or(String::from("csv"));
-            let file_name = format!("{}.{}", name, file_type);
             let csv_file_name = format!("{}.csv", name);
 
             if n_files > 1 {
@@ -50,10 +48,18 @@ fn main() {
                     } else if file_type == "parquet" {
                         // convert to parquet and remove the csv
                         let parq_file_name = format!("{}.parquet", name);
-                        convert_csv_to_parquet(&csv_file_name, &parq_file_name);
-                        // delete the csv
-                        if let Ok(()) = std::fs::remove_file(csv_file_name) {
-                            println!("Successfully created parquet file with {} rows", rows);
+                        if let Ok(()) = convert_csv_to_parquet(&csv_file_name, &parq_file_name) {
+                            // delete the csv
+                            if let Ok(()) = std::fs::remove_file(csv_file_name.clone()) {
+                                println!("Successfully created parquet file with {} rows", rows);
+                            }
+
+                            else {
+                                println!("Could not remove {}", csv_file_name.clone());
+                            }
+                        }
+                        else {
+                            println!("Error in converting {} to parquet", csv_file_name.clone());
                         }
                     }
                 }
@@ -69,13 +75,6 @@ fn main() {
                 .extension()
                 .and_then(OsStr::to_str)
                 .unwrap();
-
-            let file_name = Path::new(&source_str)
-                .file_name()
-                .and_then(OsStr::to_str)
-                .unwrap();
-
-            let file_name_string = file_name.to_string();
 
             let file_name_no_extension = Path::new(&source_str)
                 .file_stem()

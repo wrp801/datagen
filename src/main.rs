@@ -12,6 +12,8 @@ fn main() {
     let cli = args::Cli::parse();
 
     match cli.command {
+        // TODO: implement this in a function call or several function calls. The main function is
+        // way too long
         Commands::Create(args) => {
             let rows = args.rows;
             let name = args.name;
@@ -67,6 +69,8 @@ fn main() {
         },
         // handle the convert command
         Commands::Convert(args) => {
+            // TODO: put this in a function 
+            // TODO: implement the ability to convert multiple files using a glob pattern
             let source = args.source;
             let file_type = args.file_type;
             let source_str = source.to_owned();

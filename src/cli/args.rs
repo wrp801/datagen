@@ -1,5 +1,5 @@
 use clap::Parser;
-use clap::{Subcommand};
+use clap::Subcommand;
 
 #[derive(Debug, Parser)]
 #[clap(name = "datagen", version)]
@@ -45,7 +45,5 @@ pub struct ConvertArgs {
     pub source: String,
 
     #[clap(short = 'y', long = "file-type")]
-    pub file_type: String
-
+    pub file_type: String,
 }
-

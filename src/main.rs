@@ -1,117 +1,20 @@
-mod args;
-mod fns;
-
+use crate::cli::args;
+use crate::cli::commands::{datagen_convert, datagen_create};
 use args::Commands;
 use clap::Parser;
-use std::{path::Path, ffi::OsStr, string::String};
 
-use fns::{convert_csv_to_parquet, generate_csv_file, convert_parquet_to_csv};
+pub mod cli;
 
 fn main() {
-    env_logger::init();
     let cli = args::Cli::parse();
 
     match cli.command {
-        // TODO: implement this in a function call or several function calls. The main function is
-        // way too long
         Commands::Create(args) => {
-            let rows = args.rows;
-            let name = args.name;
-            let n_files = args.multiple.unwrap_or(1);
-            let num_threads = args.threads.unwrap_or(4);
-            let file_type = args.file_type.unwrap_or(String::from("csv"));
-            let csv_file_name = format!("{}.csv", name);
-
-            if n_files > 1 {
-                for i in 1..n_files + 1 {
-                    // let new_file_name = format!("{}_{}.{}", name, i, file_type);
-                    let csv_file_path = format!("{}_{}.csv", name, i);
-                    if let Ok(()) = generate_csv_file(&rows, &csv_file_path, &num_threads) {
-                        if file_type == "csv" {
-                            println!("CSV file {} successfully created", csv_file_path);
-                        } else if file_type == "parquet" {
-                            let parq_file_name = format!("{}_{}.parquet", name, i);
-                            if let Ok(()) = convert_csv_to_parquet(&csv_file_path, &parq_file_name) {
-                                println!("Successfully created parquet file {}", parq_file_name);
-                                if let Ok(()) = std::fs::remove_file(csv_file_path) {
-                                    println!(
-                                        "Successfully created parquet file {} of {} with {} rows",
-                                        i, n_files, rows
-                                    );
-                            }
-                            }
-                        }
-                    }
-                }
-            } else {
-                if let Ok(()) = generate_csv_file(&rows, &csv_file_name, &num_threads) {
-                    println!("CSV created successfully with {} rows", rows);
-                    if file_type == "csv" {
-                    } else if file_type == "parquet" {
-                        // convert to parquet and remove the csv
-                        let parq_file_name = format!("{}.parquet", name);
-                        if let Ok(()) = convert_csv_to_parquet(&csv_file_name, &parq_file_name) {
-                            // delete the csv
-                            if let Ok(()) = std::fs::remove_file(csv_file_name.clone()) {
-                                println!("Successfully created parquet file with {} rows", rows);
-                            }
-
-                            else {
-                                println!("Could not remove {}", csv_file_name.clone());
-                            }
-                        }
-                        else {
-                            println!("Error in converting {} to parquet", csv_file_name.clone());
-                        }
-                    }
-                }
-            }
-        },
+            let _ = datagen_create(&args);
+        }
         // handle the convert command
         Commands::Convert(args) => {
-            // TODO: put this in a function 
-            // TODO: implement the ability to convert multiple files using a glob pattern
-            let source = args.source;
-            let file_type = args.file_type;
-            let source_str = source.to_owned();
-
-            let extension = Path::new(&source_str)
-                .extension()
-                .and_then(OsStr::to_str)
-                .unwrap();
-
-            let file_name_no_extension = Path::new(&source_str)
-                .file_stem()
-                .unwrap();
-
-            let file_name_no_extension_string = file_name_no_extension.to_str().unwrap();
-
-            match extension {
-                "csv" => {
-                    // convert the csv to parquet
-                    if file_type == "parquet" {
-                        let parq_name = format!("{}.parquet", file_name_no_extension_string);
-                        if let Ok(()) = convert_csv_to_parquet(&source, &parq_name) {
-                            println!("Successfully converted {} to {}", source, parq_name);
-                        }
-                    }
-                },
-                "parquet"  => {
-                    // convert the parquet to csv
-                    if file_type == "csv" {
-                        let csv_name = format!("{}.csv", file_name_no_extension_string);
-                        if let Ok(()) = convert_parquet_to_csv(&source, &csv_name) {
-                            println!("Successfully converted {} to {}", source, csv_name);
-                        }
-                    }
-                },
-                _ => {
-                    panic!("Error: Unsupported file type. Options for conversion are csv or parquet")
-                }
-
-
-            }
-
+            let _ = datagen_convert(&args);
         }
     }
 }

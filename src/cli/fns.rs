@@ -126,7 +126,10 @@ pub fn generate_csv_file(
 }
 
 /// Converts a CSV on disk to Parquet
-pub fn convert_csv_to_parquet(csv_path: &String, parquet_file_name: &String) -> Result<(), Box<dyn Error>>{
+pub fn convert_csv_to_parquet(
+    csv_path: &String,
+    parquet_file_name: &String,
+) -> Result<(), Box<dyn Error>> {
     let parq_file_name = format!("{}", *parquet_file_name);
     // create the parquet file
     let mut parq_file = File::create(parq_file_name).unwrap();
@@ -141,7 +144,10 @@ pub fn convert_csv_to_parquet(csv_path: &String, parquet_file_name: &String) -> 
     Ok(())
 }
 
-pub fn convert_parquet_to_csv(parquet_path: &String, csv_file_name: &String) -> Result<(), Box<dyn Error>> {
+pub fn convert_parquet_to_csv(
+    parquet_path: &String,
+    csv_file_name: &String,
+) -> Result<(), Box<dyn Error>> {
     let csv_file_name = format!("{}", *csv_file_name);
     // create the parquet file
     let mut csv_file = File::create(csv_file_name).unwrap();

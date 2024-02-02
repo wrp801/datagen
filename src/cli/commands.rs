@@ -111,6 +111,7 @@ fn convert_file(
 }
 
 pub fn datagen_convert(args: &ConvertArgs) -> Result<(), Box<dyn Error>> {
+
     let source = args.source.clone();
     let file_type = args.file_type.clone();
     let source_str = source.to_owned();

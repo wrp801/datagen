@@ -549,6 +549,7 @@ dependencies = [
  "chrono",
  "clap",
  "env_logger 0.10.1",
+ "glob",
  "log 0.4.20",
  "polars",
  "polars-core",

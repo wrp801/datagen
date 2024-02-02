@@ -44,6 +44,32 @@ pub struct ConvertArgs {
     #[clap(short = 's', long = "source")]
     pub source: String,
 
+    /// The type of file to convert to
+    #[clap(short = 'y', long = "file-type")]
+    pub file_type: String,
+
+    /// Command designating that datagen should convert multiple files
+    #[clap(subcommand)]
+    pub multiple: Option<MultipleCommand>
+}
+
+/// Command designating that datagen should convert multiple files
+#[derive(Debug, Subcommand)]
+pub enum MultipleCommand {
+    Multiple(MultipleArgs)
+}
+
+
+/// Args for Multiple
+#[derive(Debug, Parser)]
+pub struct MultipleArgs {
+    /// The glob pattern of the files to match against
+    #[clap(short = 'p', long = "pattern")]
+    pub pattern: String,
+
+    /// The file type to convert to
     #[clap(short = 'y', long = "file-type")]
     pub file_type: String,
 }
+
+

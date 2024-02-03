@@ -50,15 +50,14 @@ pub struct ConvertArgs {
 
     /// Command designating that datagen should convert multiple files
     #[clap(subcommand)]
-    pub multiple: Option<MultipleCommand>
+    pub multiple: Option<MultipleCommand>,
 }
 
 /// Command designating that datagen should convert multiple files
 #[derive(Debug, Subcommand)]
 pub enum MultipleCommand {
-    Multiple(MultipleArgs)
+    Multiple(MultipleArgs),
 }
-
 
 /// Args for Multiple
 #[derive(Debug, Parser)]
@@ -71,5 +70,3 @@ pub struct MultipleArgs {
     #[clap(short = 'y', long = "file-type")]
     pub file_type: String,
 }
-
-

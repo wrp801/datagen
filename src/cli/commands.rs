@@ -14,7 +14,7 @@ fn create_multiple(
 ) -> Result<(), Box<dyn Error>> {
     for i in 1..n_files + 1 {
         let csv_file_path = format!("{}_{}.csv", name, i);
-        if let Ok(()) = generate_csv_file(&rows, &csv_file_path, &n_threads) {
+        if let Ok(()) = generate_csv_file(rows, &csv_file_path, n_threads) {
             if file_type == "csv" {
                 println!("CSV file {} successfully created", csv_file_path);
             } else if file_type == "parquet" {
@@ -42,7 +42,7 @@ fn create_single(
     file_type: &String,
 ) -> Result<(), Box<dyn Error>> {
     let csv_file_name = format!("{}.csv", name);
-    if let Ok(()) = generate_csv_file(&rows, &csv_file_name, &n_threads) {
+    if let Ok(()) = generate_csv_file(rows, &csv_file_name, n_threads) {
         println!("CSV created successfully with {} rows", rows);
         if file_type == "csv" {
         } else if file_type == "parquet" {
@@ -89,7 +89,7 @@ fn convert_file(
             // convert the csv to parquet
             if file_type == "parquet" {
                 let parq_name = format!("{}.parquet", file_name_no_extension_string);
-                if let Ok(()) = convert_csv_to_parquet(&source, &parq_name) {
+                if let Ok(()) = convert_csv_to_parquet(source, &parq_name) {
                     println!("Successfully converted {} to {}", source, parq_name);
                 }
             }
@@ -98,7 +98,7 @@ fn convert_file(
             // convert the parquet to csv
             if file_type == "csv" {
                 let csv_name = format!("{}.csv", file_name_no_extension_string);
-                if let Ok(()) = convert_parquet_to_csv(&source, &csv_name) {
+                if let Ok(()) = convert_parquet_to_csv(source, &csv_name) {
                     println!("Successfully converted {} to {}", source, csv_name);
                 }
             }
@@ -125,7 +125,7 @@ pub fn datagen_convert(args: &ConvertArgs) -> Result<(), Box<dyn Error>> {
     let file_name_no_extension_string = file_name_no_extension.to_str().unwrap();
 
     convert_file(
-        &extension,
+        extension,
         &file_type,
         file_name_no_extension_string,
         &source,

@@ -1,7 +1,8 @@
-use crate::cli::args::{ConvertArgs, CreateArgs};
+use crate::cli::args::{ConvertArgs, CreateArgs, MultipleArgs};
 use crate::cli::fns::{convert_csv_to_parquet, convert_parquet_to_csv, generate_csv_file};
 use std::error::Error;
 use std::{ffi::OsStr, path::Path, string::String};
+use glob::glob;
 
 /// Creates multiple files into either a CSV or Parquet. Each file name will be prefixed with
 /// <filename>_<index>
@@ -21,7 +22,7 @@ fn create_multiple(
                 let parq_file_name = format!("{}_{}.parquet", name, i);
                 if let Ok(()) = convert_csv_to_parquet(&csv_file_path, &parq_file_name) {
                     println!("Successfully created parquet file {}", parq_file_name);
-                    if let Ok(()) = std::fs::remove_file(csv_file_path) {
+                    if let Ok(())= std::fs::remove_file(csv_file_path) {
                         println!(
                             "Successfully created parquet file {} of {} with {} rows",
                             i, n_files, rows
@@ -111,8 +112,8 @@ fn convert_file(
 }
 
 pub fn datagen_convert(args: &ConvertArgs) -> Result<(), Box<dyn Error>> {
-    let source = args.source.clone();
-    let file_type = args.file_type.clone();
+    let source = args.source.clone().unwrap();
+    let file_type = args.file_type.clone().unwrap();
     let source_str = source.to_owned();
 
     let extension = Path::new(&source_str)
@@ -130,6 +131,48 @@ pub fn datagen_convert(args: &ConvertArgs) -> Result<(), Box<dyn Error>> {
         file_name_no_extension_string,
         &source,
     )?;
+
+    Ok(())
+}
+
+
+/// converts multiple files
+pub fn convert_multiple(args: &MultipleArgs) -> Result<(), Box<dyn Error>> {
+    let pattern = args.pattern.clone();
+    let file_type = args.file_type.clone();
+    let source_str = pattern.to_owned();
+    let file_type_str = file_type.as_str();
+
+    for entry in glob(&(pattern.to_owned())).expect("Could not read glob pattern") {
+        match entry {
+            // Ok(path) => println!("{:?}", path.display()),
+            Ok(path) => {
+                let file_name = "";
+                let extension = Path::new(&source_str)
+                    .extension()
+                    .and_then(OsStr::to_str)
+                    .unwrap();
+
+                let file_name_no_extension = Path::new(&source_str)
+                    .file_stem()
+                    .unwrap();
+                match file_type_str {
+                    "csv" => {
+                        println!("Entry is {:?}", path.display());
+                    }
+                    "parquet" => {
+
+                    }
+                    _ => {
+                        println!("File type not supported")
+
+                    }
+                }
+
+            },
+            Err(e) => println!("{:?}", e),
+        }
+    }
 
     Ok(())
 }

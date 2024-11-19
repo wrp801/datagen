@@ -17,13 +17,14 @@ pub enum Commands {
 
 #[derive(Debug, Parser)]
 pub struct CreateArgs {
+
+    /// The name of the file to make. Defaults to sample
+    pub name: String,
+
     /// Number of rows to generate
     #[clap(short = 'r', long = "rows")]
     pub rows: i32,
 
-    /// The name of the file to make. Defaults to sample
-    #[clap(short = 'f', long = "filename")]
-    pub name: String,
 
     /// The number of files to be created
     #[clap(short = 'm', long = "multiple", required = false)]
@@ -40,17 +41,18 @@ pub struct CreateArgs {
 
 #[derive(Debug, Parser)]
 pub struct ConvertArgs {
-    /// The name of the source file to convert
-    #[clap(short = 's', long = "source")]
-    pub source: String,
-
-    /// The type of file to convert to
-    #[clap(short = 'y', long = "file-type")]
-    pub file_type: String,
-
     /// Command designating that datagen should convert multiple files
     #[clap(subcommand)]
     pub multiple: Option<MultipleCommand>,
+
+    /// The name of the source file to convert
+    #[clap(short = 's', long = "source")]
+    pub source: Option<String>,
+
+    /// The type of file to convert to
+    #[clap(short = 'y', long = "file-type")]
+    pub file_type: Option<String>,
+
 }
 
 /// Command designating that datagen should convert multiple files

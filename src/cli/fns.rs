@@ -10,7 +10,6 @@ use std::path::PathBuf;
 use std::sync::{Arc, Mutex};
 use std::thread;
 // use polars::prelude::*;
-use polars_core::prelude::*;
 use polars_io::prelude::*;
 
 // Generate a random string of length 'len'
@@ -27,7 +26,7 @@ pub fn generate_random_char() -> char {
     // choose a random character from the ascii table then convert it
     let num = rand::thread_rng().gen_range(97..=122);
 
-    return char::from_u32(num).unwrap();
+    char::from_u32(num).unwrap()
 }
 
 // Generate a random integer in the range [min, max]
@@ -61,7 +60,7 @@ pub fn generate_headers(name: &String) -> PathBuf {
     let headers = "string_col,char_col,int_col,float_col,bool_col,date_col,datetime_col";
     // write the headers
     writeln!(file, "{}", headers).unwrap();
-    return PathBuf::from(name);
+    PathBuf::from(name)
 }
 
 pub fn generate_csv_file(
@@ -111,7 +110,7 @@ pub fn generate_csv_file(
                     string_val, char_val, int_val, float_val, bool_val, date_val, datetime_val
                 );
                 let mut file_writer = file_writer_clone.lock().unwrap();
-                file_writer.write(row.as_bytes()).unwrap();
+                file_writer.write_all(row.as_bytes()).unwrap();
             }
         }));
     }
@@ -127,8 +126,11 @@ pub fn generate_csv_file(
 }
 
 /// Converts a CSV on disk to Parquet
-pub fn convert_csv_to_parquet(csv_path: &String, parquet_file_name: &String) -> Result<(), Box<dyn Error>>{
-    let parq_file_name = format!("{}", *parquet_file_name);
+pub fn convert_csv_to_parquet(
+    csv_path: &String,
+    parquet_file_name: &String,
+) -> Result<(), Box<dyn Error>> {
+    let parq_file_name = (*parquet_file_name).to_string();
     // create the parquet file
     let mut parq_file = File::create(parq_file_name).unwrap();
     let mut df: DataFrame = CsvReader::from_path(csv_path)
@@ -142,8 +144,11 @@ pub fn convert_csv_to_parquet(csv_path: &String, parquet_file_name: &String) -> 
     Ok(())
 }
 
-pub fn convert_parquet_to_csv(parquet_path: &String, csv_file_name: &String) -> Result<(), Box<dyn Error>> {
-    let csv_file_name = format!("{}", *csv_file_name);
+pub fn convert_parquet_to_csv(
+    parquet_path: &String,
+    csv_file_name: &String,
+) -> Result<(), Box<dyn Error>> {
+    let csv_file_name = (*csv_file_name).to_string();
     // create the parquet file
     let mut csv_file = File::create(csv_file_name).unwrap();
     let mut df = LazyFrame::scan_parquet(parquet_path, Default::default())?
